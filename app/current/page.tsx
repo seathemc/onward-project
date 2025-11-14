@@ -11,7 +11,7 @@ import { SectorBreakdownChart } from "@/components/sector-breakdown-chart";
 import { BudgetTable } from "@/components/budget-table";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { YearComparisonTable } from "@/components/year-comparison";
-import { gdpData, budgetCategories } from "@/lib/mock-data";
+import { gdpData, budgetCategories, yearComparisons } from "@/lib/mock-data";
 
 /**
  * Current Economy Page - 2024 Economic Dashboard
@@ -285,7 +285,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <YearComparisonTable />
+                  <YearComparisonTable data={yearComparisons} fromYear={2023} toYear={2024} />
                 </CardContent>
               </Card>
             </TabsContent>
