@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { EconomicForecast } from "@/components/economic-forecast";
+import { Eye, ArrowLeft } from "lucide-react";
 
 /**
  * Dashboard Page - Future Forecast
@@ -51,12 +52,14 @@ export default function DashboardPage() {
             <div className="flex gap-4 justify-center">
               <Link href="/current">
                 <Button size="lg" className="gap-2">
-                  📊 See where we are
+                  <Eye className="h-5 w-5" />
+                  See where we are
                 </Button>
               </Link>
               <Link href="/">
-                <Button size="lg" variant="outline">
-                  ← Back to home
+                <Button size="lg" variant="outline" className="gap-2">
+                  <ArrowLeft className="h-5 w-5" />
+                  Back to home
                 </Button>
               </Link>
             </div>

@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Navbar } from "@/components/navbar";
 import { WelcomeDialog } from "@/components/welcome-dialog";
+import { ChartLine, Eye } from "lucide-react";
 
 /**
  * Home Page - Landing page for Forward
@@ -78,11 +79,13 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/dashboard">
                 <Button size="lg" className="gap-2 px-8 h-12 text-base">
+                  <ChartLine className="h-5 w-5" />
                   Explore Scenarios
                 </Button>
               </Link>
               <Link href="/current">
                 <Button size="lg" variant="outline" className="gap-2 px-8 h-12 text-base">
+                  <Eye className="h-5 w-5" />
                   See Where We Are
                 </Button>
               </Link>
@@ -161,8 +164,9 @@ export default function Home() {
                     Real data on our economy, jobs, and budget. This is our starting point.
                   </p>
                   <Link href="/current">
-                    <Button variant="outline" size="sm" className="w-full">
-                      📊 Current economy
+                    <Button variant="outline" size="sm" className="w-full gap-2">
+                      <Eye className="h-4 w-4" />
+                      Current economy
                     </Button>
                   </Link>
                 </CardContent>
@@ -178,8 +182,9 @@ export default function Home() {
                     From prosperity to challenges. See what drives each outcome through 2055.
                   </p>
                   <Link href="/dashboard">
-                    <Button variant="outline" size="sm" className="w-full">
-                      🔮 Explore scenarios
+                    <Button variant="outline" size="sm" className="w-full gap-2">
+                      <ChartLine className="h-4 w-4" />
+                      Explore scenarios
                     </Button>
                   </Link>
                 </CardContent>

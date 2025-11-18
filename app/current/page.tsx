@@ -12,6 +12,7 @@ import { BudgetTable } from "@/components/budget-table";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { YearComparisonTable } from "@/components/year-comparison";
 import { gdpData, budgetCategories, yearComparisons } from "@/lib/mock-data";
+import { ChartLine, ArrowLeft } from "lucide-react";
 
 /**
  * Current Economy Page - 2024 Economic Dashboard
@@ -299,12 +300,14 @@ export default function CurrentEconomyPage() {
             <div className="flex gap-4 justify-center">
               <Link href="/dashboard">
                 <Button size="lg" className="gap-2">
-                  🔮 Explore scenarios
+                  <ChartLine className="h-5 w-5" />
+                  Explore scenarios
                 </Button>
               </Link>
               <Link href="/">
-                <Button size="lg" variant="outline">
-                  ← Back to home
+                <Button size="lg" variant="outline" className="gap-2">
+                  <ArrowLeft className="h-5 w-5" />
+                  Back to home
                 </Button>
               </Link>
             </div>

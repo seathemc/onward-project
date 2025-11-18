@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Rocket, X } from "lucide-react";
 
 /**
  * WelcomeDialog Component
@@ -131,19 +132,27 @@ export function WelcomeDialog() {
         <div className="flex flex-col gap-3 mt-6">
           <Button
             size="lg"
-            className="w-full"
+            className="w-full gap-2"
             onClick={handleContinue}
             disabled={isLoading}
           >
-            {isLoading ? "Loading..." : "Let's go 🚀"}
+            {isLoading ? (
+              "Loading..."
+            ) : (
+              <>
+                <Rocket className="h-5 w-5" />
+                Let's go
+              </>
+            )}
           </Button>
           <Button
             size="sm"
             variant="ghost"
             onClick={handleSkip}
-            className="text-xs text-muted-foreground"
+            className="text-xs text-muted-foreground gap-2"
             disabled={isLoading}
           >
+            <X className="h-3 w-3" />
             Skip intro
           </Button>
         </div>

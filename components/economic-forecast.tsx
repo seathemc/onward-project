@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { forecastScenarios } from "@/lib/forecast-scenarios";
+import { Check, Plus } from "lucide-react";
+import confetti from "canvas-confetti";
 
 const iconMap: Record<string, string> = {
   "trending-up": "📈",
@@ -32,9 +34,23 @@ export function EconomicForecast() {
   const [metric, setMetric] = useState<"gdp" | "gdpPerCapita" | "unemployment" | "debtToGDP">("gdp");
 
   const toggleScenario = (id: string) => {
-    setSelectedScenarios(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    setSelectedScenarios(prev => {
+      const isCurrentlySelected = prev.includes(id);
+
+      // If adding a good scenario, fire confetti
+      if (!isCurrentlySelected) {
+        const scenario = forecastScenarios.find(s => s.id === id);
+        if (scenario?.category === "good") {
+          confetti({
+            particleCount: 60,
+            spread: 60,
+            origin: { y: 0.6 }
+          });
+        }
+      }
+
+      return isCurrentlySelected ? prev.filter(s => s !== id) : [...prev, id];
+    });
   };
 
   const selectedData = forecastScenarios.filter(s => selectedScenarios.includes(s.id));
@@ -109,8 +125,19 @@ export function EconomicForecast() {
                     <Button
                       variant={isSelected ? "default" : "outline"}
                       size="sm"
+                      className="gap-1"
                     >
-                      {isSelected ? "✓" : "Select"}
+                      {isSelected ? (
+                        <>
+                          <Check className="h-3 w-3" />
+                          Selected
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3" />
+                          Select
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardHeader>
@@ -159,8 +186,19 @@ export function EconomicForecast() {
                     <Button
                       variant={isSelected ? "default" : "outline"}
                       size="sm"
+                      className="gap-1"
                     >
-                      {isSelected ? "✓" : "Select"}
+                      {isSelected ? (
+                        <>
+                          <Check className="h-3 w-3" />
+                          Selected
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-3 w-3" />
+                          Select
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardHeader>
