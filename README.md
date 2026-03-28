@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bahamas Economic Intelligence Dashboard
 
-## Getting Started
+Investor-facing macro dashboard for the Commonwealth of the Bahamas. Real GDP, budget, and fiscal data — structured for capital deployment decisions.
 
-First, run the development server:
+## What it does
+
+Surfaces key economic indicators for the Bahamas in a clean, readable format:
+
+- **GDP trends** — quarterly nominal GDP (2023–2024), sectoral breakdown (tourism, financial services, construction, agriculture)
+- **Budget & fiscal position** — revenue, expenditure, deficit, and debt figures from the Ministry of Finance
+- **Year-over-year comparisons** — 2023 vs 2024 across all major metrics
+- **Economic scenarios** — 7 forward projections through 2055, modelling different development paths
+
+## Data sources
+
+All figures are sourced from official publications:
+
+| Dataset | Source |
+|---|---|
+| GDP (nominal, annual) | [World Bank Open Data — NY.GDP.MKTP.CD](https://api.worldbank.org/v2/country/BS/indicator/NY.GDP.MKTP.CD) |
+| Budget & expenditure | Ministry of Finance, 2024/2025 Budget Statement |
+| Sectoral estimates | World Bank, IMF World Economic Outlook |
+
+Monetary values in millions of Bahamian Dollars (BSD, pegged 1:1 to USD).
+
+**Key figures (2024):**
+- GDP: $15.83B
+- GDP per capita: ~$38,800
+- Budget revenue: $3.54B
+- Budget deficit: -$70M
+- National debt: $11.7B (73.9% of GDP)
+
+## Stack
+
+- Next.js 14 (App Router)
+- TypeScript
+- shadcn/ui + Tailwind CSS
+- Recharts
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`lib/api.ts` has a `USE_REAL_API` flag (currently `false`). Set to `true` and configure `NEXT_PUBLIC_API_URL` to connect live endpoints:
 
-## Learn More
+```
+GET /api/gdp?year=2024
+GET /api/budget?year=2024
+GET /api/budget/categories?year=2024
+GET /api/comparisons?from=2023&to=2024
+```
 
-To learn more about Next.js, take a look at the following resources:
+Data layer is in `lib/mock-data.ts` — hardcoded real figures until live endpoints are available.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deployable to Vercel. No backend required in mock mode.

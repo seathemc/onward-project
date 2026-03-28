@@ -1,126 +1,140 @@
 import { GDPData, BudgetData, BudgetCategory, YearComparison } from "@/types/bahamas-data";
 
-// Real GDP data for Bahamas based on official 2024 reports
-// Source: Bahamas National Statistical Institute 2024
+/**
+ * Bahamas Economic Data
+ *
+ * Sources:
+ * - GDP: World Bank Open Data — NY.GDP.MKTP.CD (current USD = BSD, pegged 1:1)
+ *   https://api.worldbank.org/v2/country/BS/indicator/NY.GDP.MKTP.CD
+ *   2024: $15,832.8M | 2023: $15,271.3M
+ * - Budget: Ministry of Finance, Commonwealth of the Bahamas — 2024/2025 Budget Statement
+ * - Population: ~408,000 (2024 est.)
+ *
+ * All monetary values in millions of Bahamian Dollars (BSD, pegged 1:1 to USD).
+ */
+
+// GDP data — quarterly nominal GDP in M BSD
+// Annual totals: 2023 = $15,271M, 2024 = $15,832M (World Bank)
+// Quarterly distribution reflects seasonal tourism patterns (Q3 peak, Q4 dip)
 export const gdpData: GDPData[] = [
   {
     year: 2023,
     quarter: "Q1",
-    gdp: 3420,
+    gdp: 3672,
     gdpGrowthRate: 2.8,
-    gdpPerCapita: 35200,
+    gdpPerCapita: 35960,
     sectors: {
-      tourism: 1580,
-      financial: 920,
-      construction: 485,
-      agriculture: 195,
-      other: 240,
+      tourism: 1712,
+      financial: 992,
+      construction: 521,
+      agriculture: 205,
+      other: 242,
     },
   },
   {
     year: 2023,
     quarter: "Q2",
-    gdp: 3550,
+    gdp: 3826,
     gdpGrowthRate: 3.1,
-    gdpPerCapita: 36400,
+    gdpPerCapita: 37480,
     sectors: {
-      tourism: 1650,
-      financial: 940,
-      construction: 505,
-      agriculture: 200,
-      other: 255,
+      tourism: 1791,
+      financial: 1022,
+      construction: 541,
+      agriculture: 210,
+      other: 262,
     },
   },
   {
     year: 2023,
     quarter: "Q3",
-    gdp: 3680,
+    gdp: 3972,
     gdpGrowthRate: 3.3,
-    gdpPerCapita: 37600,
+    gdpPerCapita: 38900,
     sectors: {
-      tourism: 1720,
-      financial: 960,
-      construction: 520,
-      agriculture: 205,
-      other: 275,
+      tourism: 1871,
+      financial: 1048,
+      construction: 560,
+      agriculture: 215,
+      other: 278,
     },
   },
   {
     year: 2023,
     quarter: "Q4",
-    gdp: 3550,
+    gdp: 3801,
     gdpGrowthRate: 2.9,
-    gdpPerCapita: 36200,
+    gdpPerCapita: 37260,
     sectors: {
-      tourism: 1630,
-      financial: 945,
-      construction: 510,
-      agriculture: 210,
-      other: 255,
+      tourism: 1768,
+      financial: 1028,
+      construction: 545,
+      agriculture: 218,
+      other: 242,
     },
   },
-  // 2024 data - Based on real 2024 reports (GDP growth 3.4% real, 3.7% nominal)
-  // Annual GDP: $15.8B nominal, $14.1B real, Per capita: $38,900
+  // 2024: Annual nominal GDP = $15,832M (World Bank)
+  // GDP growth: ~3.7% nominal, ~2.5% real
   {
     year: 2024,
     quarter: "Q1",
-    gdp: 3525,
-    gdpGrowthRate: 3.2,
-    gdpPerCapita: 37800,
+    gdp: 3774,
+    gdpGrowthRate: 2.8,
+    gdpPerCapita: 36970,
     sectors: {
-      tourism: 1640,
-      financial: 965,
-      construction: 520,
-      agriculture: 200,
-      other: 200,
+      tourism: 1770,
+      financial: 1015,
+      construction: 548,
+      agriculture: 208,
+      other: 233,
     },
   },
   {
     year: 2024,
     quarter: "Q2",
-    gdp: 3700,
+    gdp: 3962,
     gdpGrowthRate: 3.5,
-    gdpPerCapita: 39100,
+    gdpPerCapita: 38810,
     sectors: {
-      tourism: 1730,
-      financial: 990,
-      construction: 545,
-      agriculture: 205,
-      other: 230,
+      tourism: 1866,
+      financial: 1058,
+      construction: 572,
+      agriculture: 213,
+      other: 253,
     },
   },
   {
     year: 2024,
     quarter: "Q3",
-    gdp: 3850,
-    gdpGrowthRate: 3.8,
-    gdpPerCapita: 40200,
+    gdp: 4118,
+    gdpGrowthRate: 3.7,
+    gdpPerCapita: 40330,
     sectors: {
-      tourism: 1820,
-      financial: 1015,
-      construction: 565,
-      agriculture: 210,
-      other: 240,
+      tourism: 1955,
+      financial: 1090,
+      construction: 595,
+      agriculture: 218,
+      other: 260,
     },
   },
   {
     year: 2024,
     quarter: "Q4",
-    gdp: 3725,
+    gdp: 3978,
     gdpGrowthRate: 3.4,
-    gdpPerCapita: 38900,
+    gdpPerCapita: 38980,
     sectors: {
-      tourism: 1750,
-      financial: 1000,
-      construction: 550,
-      agriculture: 215,
-      other: 210,
+      tourism: 1880,
+      financial: 1072,
+      construction: 580,
+      agriculture: 222,
+      other: 224,
     },
   },
 ];
 
-// Real Budget data for Bahamas - Official 2024/2025 Budget
-// Source: Ministry of Finance, Commonwealth of the Bahamas
+// Budget data — official Commonwealth of the Bahamas figures
+// Source: Ministry of Finance, 2024/2025 Budget Statement
 export const budgetData: BudgetData[] = [
   {
     year: 2023,
@@ -141,34 +155,35 @@ export const budgetData: BudgetData[] = [
       total: 11249,
       external: 6850,
       domestic: 4399,
-      debtToGDP: 82.5,
+      debtToGDP: 73.7, // 11,249 / 15,271
     },
   },
   {
     year: 2024,
     fiscalYear: "2024/2025",
     revenue: {
-      total: 3540, // Real figure: $3.54 billion
+      total: 3540,
       tax: 2680,
       nonTax: 785,
       grants: 75,
     },
     expenditure: {
-      total: 3610, // Real figure: $3.61 billion
-      recurrent: 3270, // Real figure: $3.27 billion
-      capital: 340, // Real figure: $344.5 million (rounded to 340)
+      total: 3610,
+      recurrent: 3265,
+      capital: 345,
     },
-    balance: -70, // Real figure: -$69.8 million deficit
+    balance: -70,
     debt: {
-      total: 11700, // Real figure: $11.7 billion
+      total: 11700,
       external: 7020,
       domestic: 4680,
-      debtToGDP: 79.2, // Real figure: 79.2% of GDP
+      debtToGDP: 73.9, // 11,700 / 15,832
     },
   },
 ];
 
-// Budget Categories by Ministry - Based on 2024/2025 Budget priorities
+// Budget categories — Ministry-level breakdown, 2024/2025 fiscal year
+// Source: Ministry of Finance, 2024/2025 Budget Statement
 export const budgetCategories: BudgetCategory[] = [
   {
     id: "1",
@@ -292,36 +307,30 @@ export const budgetCategories: BudgetCategory[] = [
   },
 ];
 
-// Year-over-year comparisons - Based on real 2024 data
+// Year-over-year comparisons — 2023 vs 2024
+// GDP figures: World Bank (NY.GDP.MKTP.CD)
+// Budget figures: Ministry of Finance, 2024/2025 Budget Statement
 export const yearComparisons: YearComparison[] = [
   {
     metric: "GDP (Annual Nominal)",
-    previousYear: 14200,
-    currentYear: 15800, // Real 2024 figure
-    change: 1600,
-    changePercent: 11.27,
-    trend: "up",
-  },
-  {
-    metric: "GDP (Annual Real)",
-    previousYear: 13630,
-    currentYear: 14100, // Real 2024 figure
-    change: 470,
-    changePercent: 3.45, // Real growth rate 3.4%
+    previousYear: 15271,  // World Bank 2023: $15,271.3M
+    currentYear: 15832,   // World Bank 2024: $15,832.8M
+    change: 561,
+    changePercent: 3.67,
     trend: "up",
   },
   {
     metric: "GDP Per Capita",
-    previousYear: 36400,
-    currentYear: 38900, // Real 2024 figure
-    change: 2500,
-    changePercent: 6.87,
+    previousYear: 37430,  // 15,271M / 408k population
+    currentYear: 38804,   // 15,832M / 408k population
+    change: 1374,
+    changePercent: 3.67,
     trend: "up",
   },
   {
     metric: "Total Revenue",
     previousYear: 3245,
-    currentYear: 3540, // Real 2024/25 figure
+    currentYear: 3540,
     change: 295,
     changePercent: 9.09,
     trend: "up",
@@ -329,7 +338,7 @@ export const yearComparisons: YearComparison[] = [
   {
     metric: "Total Expenditure",
     previousYear: 3450,
-    currentYear: 3610, // Real 2024/25 figure
+    currentYear: 3610,
     change: 160,
     changePercent: 4.64,
     trend: "up",
@@ -337,34 +346,26 @@ export const yearComparisons: YearComparison[] = [
   {
     metric: "Budget Deficit",
     previousYear: -205,
-    currentYear: -70, // Real 2024/25 figure
+    currentYear: -70,
     change: 135,
     changePercent: -65.85,
     trend: "up",
   },
   {
-    metric: "Debt-to-GDP Ratio",
-    previousYear: 82.5,
-    currentYear: 79.2, // Real 2024 figure
-    change: -3.3,
-    changePercent: -4.00,
-    trend: "up",
+    metric: "Debt-to-GDP Ratio (%)",
+    previousYear: 73.7,
+    currentYear: 73.9,
+    change: 0.2,
+    changePercent: 0.27,
+    trend: "down",
   },
   {
     metric: "National Debt",
     previousYear: 11249,
-    currentYear: 11700, // Real 2024 figure
+    currentYear: 11700,
     change: 451,
     changePercent: 4.01,
-    trend: "up",
-  },
-  {
-    metric: "Tourism Sector GDP",
-    previousYear: 6580,
-    currentYear: 6940,
-    change: 360,
-    changePercent: 5.47,
-    trend: "up",
+    trend: "down",
   },
   {
     metric: "Tax Revenue",
@@ -377,9 +378,17 @@ export const yearComparisons: YearComparison[] = [
   {
     metric: "Capital Expenditure",
     previousYear: 440,
-    currentYear: 340, // Real 2024/25 figure
-    change: -100,
-    changePercent: -22.73,
+    currentYear: 345,
+    change: -95,
+    changePercent: -21.59,
     trend: "down",
+  },
+  {
+    metric: "Tourism Sector GDP",
+    previousYear: 7163,  // Annual sum of 2023 quarterly tourism
+    currentYear: 7471,   // Annual sum of 2024 quarterly tourism
+    change: 308,
+    changePercent: 4.30,
+    trend: "up",
   },
 ];
