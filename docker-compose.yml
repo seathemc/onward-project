@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  db:
+    image: supabase/postgres:15.1.0.111
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_EXP: 3600
+    ports:
+      - "5432:5432"
+    command: postgres -c shared_preload_libraries=pgcrypto -c max_connections=200
+
+  vector:
+    image: supabase/pgvector:0.1.11
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "3327:3327"
+
+  auth:
+    image: supabase/gotrue:v2.128.0
+    depends_on:
+      - db
+    environment:
+      GOTRUE_DB_DRIVER: postgres
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      API_EXTERNAL_URL: http://localhost:8000
+    ports:
+      - "9999:9999"
+    command: server
+
+  rest:
+    image: supabase/postgrest:v12.0.0
+    depends_on:
+      - db
+    environment:
+      PGRST_DB_URI: postgres://anon:anon@db:5432/postgres
+      PGRST_DB_SCHEMA: public
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+    ports:
+      - "3000:3000"
+
+  realtime:
+    image: supabase/realtime:v2.25.11
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      DB_PORT: 5432
+      PORT: 4000
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      REPL_PUBLICATION_NAME: supabase_realtime
+      REPL_SLOT_NAME: supabase_realtime_slot
+    ports:
+      - "4000:4000"
+
+  studio:
+    image: supabase/studio:20240408
+    depends_on:
+      - db
+      - rest
+    environment:
+      SUPABASE_URL: http://localhost:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY2OTY4NzIwMCwiZXhwIjoxODI3NDUzMjAwfQ.aeJpf29_pCMf9pC3DhVNm4Qn5dWzHkVQ_qzrMX5zHAI
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjY5Njg3MjAwLCJleHAiOjE4Mjc0NTMyMDB9.qZKP5ibdL3V_B03eVvJYNpqKQJPPuHEZjNQKOq_lQdA
+      LOGFLARE_APIKEY: fake-api-key
+      LOGFLARE_URL: http://analytics:4000
+      NEXT_PUBLIC_ENABLE_LOGS: "true"
+    ports:
+      - "3001:3000"
+
+  analytics:
+    image: supabase/logflare:1.4.0
+    ports:
+      - "4040:4000"
+    environment:
+      LOGFLARE_API_KEY: fake-api-key
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_DB: postgres
