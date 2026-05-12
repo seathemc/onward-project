@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No GDP data available" }, { status: 404 });
     }
 
-    let sql = `SELECT * FROM gdp_snapshots WHERE snapshot_version_id = $1 ORDER BY year ASC, quarter ASC`;
+    let sql = `SELECT * FROM gdp_snapshots WHERE snapshot_version_id = $1`;
     const params: unknown[] = [version.id];
 
     if (year) {
@@ -28,20 +28,23 @@ export async function GET(req: NextRequest) {
       params.push(year);
     }
 
+    sql += ` ORDER BY year ASC, quarter ASC`;
+
     const rows = await getMany<any>(sql, params);
 
+    const num = (v: unknown) => v === null || v === undefined ? 0 : Number(v);
     const gdpData: GDPData[] = rows.map((row) => ({
-      year: row.year,
+      year: num(row.year),
       quarter: row.quarter,
-      gdp: row.gdp,
-      gdpGrowthRate: row.gdp_growth_rate ?? 0,
-      gdpPerCapita: row.gdp_per_capita ?? 0,
+      gdp: num(row.gdp),
+      gdpGrowthRate: num(row.gdp_growth_rate),
+      gdpPerCapita: num(row.gdp_per_capita),
       sectors: {
-        tourism: row.tourism ?? 0,
-        financial: row.financial ?? 0,
-        construction: row.construction ?? 0,
-        agriculture: row.agriculture ?? 0,
-        other: row.other ?? 0,
+        tourism: num(row.tourism),
+        financial: num(row.financial),
+        construction: num(row.construction),
+        agriculture: num(row.agriculture),
+        other: num(row.other),
       },
     }));
 

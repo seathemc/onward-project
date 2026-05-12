@@ -95,33 +95,38 @@ export class EconomicForecastModel {
     const projections: YearProjection[] = [];
     let currentGDP = this.baseGDP;
     let currentPopulation = this.basePopulation;
-    let currentDebt = this.baseDebt;
     let currentDebtRatio = finalAssumptions.debtToGDPRatio;
+    let unemploymentRate = 10.0; // starting unemployment in 2024
+
+    // Nominal sovereign interest rate. Bahamas paid ~5% historically;
+    // post Moody's positive outlook (2025) ~4.5% is reasonable.
+    const NOMINAL_INTEREST_RATE = 0.045;
 
     for (let i = 0; i <= finalAssumptions.projectYears; i++) {
       const year = finalAssumptions.baseYear + i;
 
-      // GDP projection with tech multiplier
-      const techBoost =
-        (finalAssumptions.techSectorGrowthMultiplier - 1) * 0.005; // subtle effect
-      const annualGrowthRate = finalAssumptions.gdpGrowthRate + techBoost;
+      // Growth converges modestly over time (catch-up effect at higher income)
+      const techBoost = (finalAssumptions.techSectorGrowthMultiplier - 1) * 0.5;
+      const targetGrowth = finalAssumptions.gdpGrowthRate + techBoost;
+      const convergenceFactor = Math.max(0.7, 1 - i / 80);
+      const annualGrowthRate = targetGrowth * convergenceFactor;
       currentGDP = currentGDP * (1 + annualGrowthRate / 100);
 
       // Population growth
-      currentPopulation =
-        currentPopulation *
-        (1 + finalAssumptions.populationGrowthRate / 100);
+      currentPopulation = currentPopulation * (1 + finalAssumptions.populationGrowthRate / 100);
 
-      // Debt dynamics: reduction through growth and primary surplus
-      const primarySurplus = finalAssumptions.debtReductionRate / 100;
-      const interestRate = currentDebtRatio * 0.04; // 4% of debt/GDP
+      // Debt dynamics (standard sustainability equation):
+      //   d_{t+1} = d_t * (1 + i - g) - primary_surplus
+      // where i = nominal interest rate, g = nominal GDP growth (fraction),
+      // primary_surplus is share of GDP. With i ≈ g, ratio stays flat.
+      // With primary surplus, debt/GDP falls.
+      const nominalGrowth = annualGrowthRate / 100;
+      const primarySurplusShare = finalAssumptions.debtReductionRate / 100;
       currentDebtRatio =
-        currentDebtRatio *
-          (1 + (annualGrowthRate - finalAssumptions.inflationRate) / 100) +
-        interestRate -
-        primarySurplus;
-      currentDebtRatio = Math.max(0, currentDebtRatio);
-      currentDebt = (currentDebtRatio * currentGDP) / 100;
+        currentDebtRatio * (1 + NOMINAL_INTEREST_RATE - nominalGrowth) -
+        primarySurplusShare;
+      currentDebtRatio = Math.max(0.05, Math.min(2.0, currentDebtRatio));
+      const currentDebt = currentDebtRatio * currentGDP; // both in $M, ratio is a fraction
 
       // Sector breakdown (with tourism growth premium)
       const tourismMultiplier =
@@ -129,30 +134,21 @@ export class EconomicForecastModel {
       const tourism = currentGDP * finalAssumptions.tourismShareOfGDP * tourismMultiplier;
       const financial = currentGDP * finalAssumptions.financialShareOfGDP;
       const construction = currentGDP * finalAssumptions.constructionShareOfGDP;
-      const agriculture = currentGDP * 0.04; // fixed
-      const other =
-        currentGDP -
-        tourism -
-        financial -
-        construction -
-        agriculture;
+      const agriculture = currentGDP * 0.04;
+      const other = currentGDP - tourism - financial - construction - agriculture;
 
       // Government spending as share of GDP
       const education = currentGDP * finalAssumptions.educationSpendingShare;
-      const infrastructure =
-        currentGDP * finalAssumptions.infrastructureSpendingShare;
+      const infrastructure = currentGDP * finalAssumptions.infrastructureSpendingShare;
       const climate = currentGDP * finalAssumptions.climateInvestmentShare;
       const otherSpending =
-        currentGDP * 0.15 -
-        education -
-        infrastructure -
-        climate;
+        currentGDP * 0.15 - education - infrastructure - climate;
 
-      // Unemployment rate: decreases with growth above 2.5%, increases with contraction
-      const baseUnemployment = 10;
-      const growthEffect =
-        (annualGrowthRate - 2.5) * 0.5; // -0.5% unemployment per 1% growth above 2.5%
-      const unemploymentRate = Math.max(5, baseUnemployment - growthEffect);
+      // Unemployment dynamics: respond to growth gap + persistence
+      // Okun's law style: each 1% of growth above 2.5% reduces unemployment ~0.3 pp
+      const growthGap = annualGrowthRate - 2.5;
+      const targetUnemployment = Math.max(4, 10 - growthGap * 0.6);
+      unemploymentRate = unemploymentRate * 0.7 + targetUnemployment * 0.3;
 
       projections.push({
         year,
@@ -160,7 +156,7 @@ export class EconomicForecastModel {
         gdpReal: Math.round(
           currentGDP / Math.pow(1 + finalAssumptions.inflationRate / 100, i)
         ),
-        gdpGrowthRate: annualGrowthRate,
+        gdpGrowthRate: Number(annualGrowthRate.toFixed(2)),
         population: Math.round(currentPopulation),
         gdpPerCapita: Math.round(currentGDP / (currentPopulation / 1000000)),
         sectors: {

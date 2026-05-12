@@ -93,8 +93,10 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     error:
-      'Invalid query. Use ?type=conservative|moderate|optimistic|custom (POST for custom)',
-  });
+      "Invalid query. Use ?type=list, or ?type=<scenario>. Available scenarios: " +
+      "conservative, moderate, optimistic, plpBlueprint, fnmBetterBahamas, coalitionConsensus. " +
+      "POST a body of assumptions to generate a custom scenario.",
+  }, { status: 400 });
 }
 
 export async function POST(req: NextRequest) {

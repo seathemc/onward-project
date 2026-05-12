@@ -53,11 +53,12 @@ export async function GET(req: NextRequest) {
       [budgetVersion.id, currYear]
     );
 
-    const sum = (rows: { gdp: number }[]) => rows.reduce((acc, r) => acc + (r.gdp ?? 0), 0);
-    const avgPerCapita = (rows: { gdp_per_capita: number }[]) =>
-      rows.length ? Math.round(rows.reduce((a, r) => a + (r.gdp_per_capita ?? 0), 0) / rows.length) : 0;
-    const sumField = (rows: Record<string, number>[], field: string) =>
-      rows.reduce((a, r) => a + (r[field] ?? 0), 0);
+    const num = (v: unknown) => v === null || v === undefined ? 0 : Number(v);
+    const sum = (rows: any[]) => rows.reduce((acc, r) => acc + num(r.gdp), 0);
+    const avgPerCapita = (rows: any[]) =>
+      rows.length ? Math.round(rows.reduce((a, r) => a + num(r.gdp_per_capita), 0) / rows.length) : 0;
+    const sumField = (rows: any[], field: string) =>
+      rows.reduce((a, r) => a + num(r[field]), 0);
 
     const prevGDP = sum(prevGdpRows);
     const currGDP = sum(currGdpRows);
@@ -78,13 +79,13 @@ export async function GET(req: NextRequest) {
     const comparisons: YearComparison[] = [
       compare("GDP (Annual Nominal)", prevGDP, currGDP),
       compare("GDP Per Capita", prevPerCapita, currPerCapita),
-      compare("Total Revenue", prevBudget?.revenue_total ?? 0, currBudget?.revenue_total ?? 0),
-      compare("Total Expenditure", prevBudget?.expenditure_total ?? 0, currBudget?.expenditure_total ?? 0),
-      compare("Budget Balance", prevBudget?.balance ?? 0, currBudget?.balance ?? 0),
-      compare("Debt-to-GDP Ratio (%)", prevBudget?.debt_to_gdp ?? 0, currBudget?.debt_to_gdp ?? 0, true),
-      compare("National Debt", prevBudget?.debt_total ?? 0, currBudget?.debt_total ?? 0, true),
-      compare("Tax Revenue", prevBudget?.revenue_tax ?? 0, currBudget?.revenue_tax ?? 0),
-      compare("Capital Expenditure", prevBudget?.expenditure_capital ?? 0, currBudget?.expenditure_capital ?? 0),
+      compare("Total Revenue", num(prevBudget?.revenue_total), num(currBudget?.revenue_total)),
+      compare("Total Expenditure", num(prevBudget?.expenditure_total), num(currBudget?.expenditure_total)),
+      compare("Budget Balance", num(prevBudget?.balance), num(currBudget?.balance)),
+      compare("Debt-to-GDP Ratio (%)", num(prevBudget?.debt_to_gdp), num(currBudget?.debt_to_gdp), true),
+      compare("National Debt", num(prevBudget?.debt_total), num(currBudget?.debt_total), true),
+      compare("Tax Revenue", num(prevBudget?.revenue_tax), num(currBudget?.revenue_tax)),
+      compare("Capital Expenditure", num(prevBudget?.expenditure_capital), num(currBudget?.expenditure_capital)),
       compare("Tourism Sector GDP", prevTourism, currTourism),
     ];
 

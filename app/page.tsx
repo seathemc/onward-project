@@ -111,7 +111,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    7 futures—from digital transformation to education investment. See what's possible with different choices.
+                    Multiple futures—from PLP and FNM platforms to custom what-ifs. See what's possible with different choices.
                   </p>
                 </CardContent>
               </Card>
@@ -175,18 +175,25 @@ export default function Home() {
               <Card>
                 <CardHeader>
                   <div className="text-3xl mb-2">2️⃣</div>
-                  <CardTitle className="font-normal">Compare 7 futures</CardTitle>
+                  <CardTitle className="font-normal">Compare futures</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-3">
-                    From prosperity to challenges. See what drives each outcome through 2055.
+                    From PLP & FNM platforms to economic what-ifs. See what drives each outcome through 2064.
                   </p>
-                  <Link href="/dashboard">
-                    <Button variant="outline" size="sm" className="w-full gap-2">
-                      <ChartLine className="h-4 w-4" />
-                      Explore scenarios
-                    </Button>
-                  </Link>
+                  <div className="space-y-2">
+                    <Link href="/scenarios">
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <ChartLine className="h-4 w-4" />
+                        Economic scenarios
+                      </Button>
+                    </Link>
+                    <Link href="/political-scenarios">
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        🗳️ Political scenarios
+                      </Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -223,7 +230,7 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p>Today's babies will be 30 years old in 2055.</p>
+                  <p>Today's babies will be 40 years old in 2064.</p>
                   <p>
                     What kind of Bahamas will they inherit? Will they have opportunities here, or will they need to leave? Will our islands be resilient?
                   </p>

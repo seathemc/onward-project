@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No budget data available" }, { status: 404 });
     }
 
-    let sql = `SELECT * FROM budget_snapshots WHERE snapshot_version_id = $1 ORDER BY year ASC`;
+    let sql = `SELECT * FROM budget_snapshots WHERE snapshot_version_id = $1`;
     const params: unknown[] = [version.id];
 
     if (year) {
@@ -27,28 +27,31 @@ export async function GET(req: NextRequest) {
       params.push(year);
     }
 
+    sql += ` ORDER BY year ASC`;
+
     const rows = await getMany<any>(sql, params);
 
+    const num = (v: unknown) => v === null || v === undefined ? 0 : Number(v);
     const budgetData: BudgetData[] = rows.map((row) => ({
-      year: row.year,
+      year: num(row.year),
       fiscalYear: row.fiscal_year,
       revenue: {
-        total: row.revenue_total ?? 0,
-        tax: row.revenue_tax ?? 0,
-        nonTax: row.revenue_non_tax ?? 0,
-        grants: row.revenue_grants ?? 0,
+        total: num(row.revenue_total),
+        tax: num(row.revenue_tax),
+        nonTax: num(row.revenue_non_tax),
+        grants: num(row.revenue_grants),
       },
       expenditure: {
-        total: row.expenditure_total ?? 0,
-        recurrent: row.expenditure_recurrent ?? 0,
-        capital: row.expenditure_capital ?? 0,
+        total: num(row.expenditure_total),
+        recurrent: num(row.expenditure_recurrent),
+        capital: num(row.expenditure_capital),
       },
-      balance: row.balance ?? 0,
+      balance: num(row.balance),
       debt: {
-        total: row.debt_total ?? 0,
-        external: row.debt_external ?? 0,
-        domestic: row.debt_domestic ?? 0,
-        debtToGDP: row.debt_to_gdp ?? 0,
+        total: num(row.debt_total),
+        external: num(row.debt_external),
+        domestic: num(row.debt_domestic),
+        debtToGDP: num(row.debt_to_gdp),
       },
     }));
 

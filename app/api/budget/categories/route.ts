@@ -21,14 +21,15 @@ export async function GET() {
       [version.id]
     );
 
+    const num = (v: unknown) => v === null || v === undefined ? 0 : Number(v);
     const categories: BudgetCategory[] = rows.map((row) => ({
       id: row.category_id,
       category: row.category_name,
       ministry: row.ministry,
-      allocated: row.allocated ?? 0,
-      spent: row.spent ?? 0,
-      remaining: row.remaining ?? 0,
-      percentageUsed: row.percentage_used ?? 0,
+      allocated: num(row.allocated),
+      spent: num(row.spent),
+      remaining: num(row.remaining),
+      percentageUsed: num(row.percentage_used),
       status: row.status as BudgetCategory["status"],
     }));
 

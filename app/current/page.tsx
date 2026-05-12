@@ -27,46 +27,13 @@ import { ChartLine, ArrowLeft } from "lucide-react";
  *
  * Data sources: Ministry of Finance, Bahamas National Statistical Institute
  */
-interface GDPRow {
-  year: number;
-  quarter: string;
-  gdp: number;
-  gdp_growth_rate: number | null;
-  gdp_per_capita: number | null;
-  tourism: number;
-  financial: number;
-  construction: number;
-  agriculture: number;
-  other: number;
-}
-
-interface BudgetCategory {
-  category_id: string;
-  category_name: string;
-  ministry: string;
-  allocated: number;
-  spent: number;
-  remaining: number;
-  percentage_used: number;
-  status: string;
-}
-
-interface BudgetRow {
-  year: number;
-  revenue_total: number;
-  revenue_tax: number;
-  revenue_non_tax: number;
-  expenditure_total: number;
-  expenditure_recurrent: number;
-  expenditure_capital: number;
-  balance: number;
-}
+import type { BudgetCategory, BudgetData, YearComparison } from "@/types/bahamas-data";
 
 export default function CurrentEconomyPage() {
-  const [gdpData, setGdpData] = useState<GDPRow[]>([]);
+  const [chartGdpData, setChartGdpData] = useState<GDPData[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
-  const [budgetData, setBudgetData] = useState<BudgetRow | null>(null);
-  const [comparisons, setComparisons] = useState<any>(null);
+  const [budgetData, setBudgetData] = useState<BudgetData | null>(null);
+  const [comparisons, setComparisons] = useState<YearComparison[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -78,9 +45,13 @@ export default function CurrentEconomyPage() {
           fetch("/api/budget").then(r => r.json()),
           fetch("/api/comparisons").then(r => r.json()),
         ]);
-        if (gdpRes.status === "fulfilled" && gdpRes.value.data) setGdpData(gdpRes.value.data);
+        if (gdpRes.status === "fulfilled" && gdpRes.value.data) setChartGdpData(gdpRes.value.data);
         if (catRes.status === "fulfilled" && catRes.value.data) setBudgetCategories(catRes.value.data);
-        if (budgetRes.status === "fulfilled" && budgetRes.value.data?.[0]) setBudgetData(budgetRes.value.data[0]);
+        if (budgetRes.status === "fulfilled" && budgetRes.value.data?.length) {
+          // Use most recent year's budget
+          const sorted = [...budgetRes.value.data].sort((a, b) => b.year - a.year);
+          setBudgetData(sorted[0]);
+        }
         if (compRes.status === "fulfilled" && compRes.value.data) setComparisons(compRes.value.data);
       } finally {
         setLoading(false);
@@ -89,40 +60,12 @@ export default function CurrentEconomyPage() {
     loadData();
   }, []);
 
-  // Transform API rows to chart-compatible GDPData shape
-  const chartGdpData: GDPData[] = gdpData.map(r => ({
-    year: r.year,
-    quarter: r.quarter,
-    gdp: r.gdp,
-    gdpGrowthRate: r.gdp_growth_rate ?? 0,
-    gdpPerCapita: r.gdp_per_capita ?? 0,
-    sectors: {
-      tourism: r.tourism,
-      financial: r.financial,
-      construction: r.construction,
-      agriculture: r.agriculture,
-      other: r.other,
-    },
-  }));
-
   // Derive key metrics from live data
-  const latestYear = gdpData.length ? Math.max(...gdpData.map(r => r.year)) : null;
-  const latestYearRows = latestYear ? gdpData.filter(r => r.year === latestYear) : [];
+  const latestYear = chartGdpData.length ? Math.max(...chartGdpData.map(r => r.year)) : null;
+  const latestYearRows = latestYear ? chartGdpData.filter(r => r.year === latestYear) : [];
   const totalGDP = latestYearRows.reduce((s, r) => s + r.gdp, 0);
-  const avgGrowth = latestYearRows[0]?.gdp_growth_rate ?? null;
-  const avgPerCapita = latestYearRows[0]?.gdp_per_capita ?? null;
-
-  // Normalise budget categories to match old mock shape
-  const normCats = budgetCategories.map(r => ({
-    id: r.category_id,
-    category: r.category_name,
-    ministry: r.ministry,
-    allocated: r.allocated,
-    spent: r.spent,
-    remaining: r.remaining,
-    percentageUsed: r.percentage_used,
-    status: r.status as "on-track" | "over-budget" | "under-utilized",
-  }));
+  const avgGrowth = latestYearRows[0]?.gdpGrowthRate ?? 0;
+  const avgPerCapita = latestYearRows[0]?.gdpPerCapita ?? 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -238,7 +181,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <BudgetAccordion data={normCats} />
+                  <BudgetAccordion data={budgetCategories} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -321,7 +264,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <BudgetAccordion data={normCats} />
+                  <BudgetAccordion data={budgetCategories} />
                 </CardContent>
               </Card>
 
@@ -333,7 +276,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <BudgetTable data={normCats} />
+                  <BudgetTable data={budgetCategories} />
                 </CardContent>
               </Card>
 
@@ -346,15 +289,15 @@ export default function CurrentEconomyPage() {
                     {loading ? <Skeleton className="h-16 w-full" /> : budgetData ? (<>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Revenue</span>
-                      <span className="font-normal">${(budgetData.revenue_total / 1000).toFixed(2)}B</span>
+                      <span className="font-normal">${(budgetData.revenue.total / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax Revenue</span>
-                      <span>${(budgetData.revenue_tax / 1000).toFixed(2)}B</span>
+                      <span>${(budgetData.revenue.tax / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Other Revenue</span>
-                      <span>${(budgetData.revenue_non_tax / 1000).toFixed(2)}B</span>
+                      <span>${(budgetData.revenue.nonTax / 1000).toFixed(2)}B</span>
                     </div>
                     </>) : <p className="text-sm text-muted-foreground">No data</p>}
                   </CardContent>
@@ -368,15 +311,15 @@ export default function CurrentEconomyPage() {
                     {loading ? <Skeleton className="h-16 w-full" /> : budgetData ? (<>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Expenditure</span>
-                      <span className="font-normal">${(budgetData.expenditure_total / 1000).toFixed(2)}B</span>
+                      <span className="font-normal">${(budgetData.expenditure.total / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Recurrent</span>
-                      <span>${(budgetData.expenditure_recurrent / 1000).toFixed(2)}B</span>
+                      <span>${(budgetData.expenditure.recurrent / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Capital</span>
-                      <span>${(budgetData.expenditure_capital / 1000).toFixed(2)}B</span>
+                      <span>${(budgetData.expenditure.capital / 1000).toFixed(2)}B</span>
                     </div>
                     </>) : <p className="text-sm text-muted-foreground">No data</p>}
                   </CardContent>
