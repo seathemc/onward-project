@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DataFreshnessBadge } from "./data-freshness-badge";
 
 /**
  * Navbar Component - Responsive Navigation
@@ -24,6 +25,8 @@ export function Navbar() {
     { href: "/", label: "Home", icon: "🏠" },
     { href: "/current", label: "Current", icon: "📊" },
     { href: "/dashboard", label: "Forecast", icon: "🔮" },
+    { href: "/scenarios", label: "Scenarios", icon: "📈" },
+    { href: "/political-scenarios", label: "Politics", icon: "🗳️" },
   ];
 
   return (
@@ -58,9 +61,10 @@ export function Navbar() {
           </nav>
 
           {/* Footer */}
-          <div className="p-6 border-t border-border">
+          <div className="p-6 border-t border-border space-y-2">
+            <DataFreshnessBadge />
             <p className="text-xs text-muted-foreground">
-              Planning the Bahamas' future with real data
+              Planning the Bahamas&apos; future with real data
             </p>
           </div>
         </div>

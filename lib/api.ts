@@ -1,146 +1,149 @@
 import { GDPData, BudgetData, BudgetCategory, YearComparison } from "@/types/bahamas-data";
 import { gdpData, budgetData, budgetCategories, yearComparisons } from "./mock-data";
 
-// Configuration - Set USE_REAL_API to true when you have real endpoints
-const USE_REAL_API = false;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.bahamas.gov.bs";
+const IS_SERVER = typeof window === "undefined";
 
-/**
- * Generic fetch wrapper for API calls
- * Handles errors and can be extended with auth headers, etc.
- */
-async function apiCall<T>(endpoint: string): Promise<T> {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-        // Add auth headers here if needed:
-        // "Authorization": `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("API call failed:", error);
-    throw error;
+// Use absolute URL on server, relative on client
+function apiBase() {
+  if (IS_SERVER) {
+    const url = process.env.NEXT_PUBLIC_API_URL ?? process.env.VERCEL_URL;
+    if (url) return url.startsWith("http") ? url : `https://${url}`;
+    return "http://localhost:3000";
   }
+  return "";
 }
 
-/**
- * Fetch GDP data
- * Real API endpoint would be: /api/gdp?year=2024
- */
+async function apiFetch<T>(path: string): Promise<{ data: T; meta?: Record<string, unknown> }> {
+  const url = `${apiBase()}${path}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+  return res.json();
+}
+
+function isSuppressed(): boolean {
+  return !process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
+
+// ----------------------------------------------------------------
+// GDP
+// ----------------------------------------------------------------
 export async function fetchGDPData(year?: number): Promise<GDPData[]> {
-  if (USE_REAL_API) {
-    const endpoint = year ? `/api/gdp?year=${year}` : "/api/gdp";
-    return apiCall<GDPData[]>(endpoint);
+  if (isSuppressed()) {
+    await delay(300);
+    return year ? gdpData.filter((d) => d.year === year) : gdpData;
   }
-
-  // Mock data with simulated network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  if (year) {
-    return gdpData.filter((data) => data.year === year);
+  const path = year ? `/api/gdp?year=${year}` : "/api/gdp";
+  try {
+    const { data } = await apiFetch<GDPData[]>(path);
+    return data;
+  } catch {
+    return year ? gdpData.filter((d) => d.year === year) : gdpData;
   }
-
-  return gdpData;
 }
 
-/**
- * Fetch budget data
- * Real API endpoint would be: /api/budget?year=2024
- */
+// ----------------------------------------------------------------
+// Budget
+// ----------------------------------------------------------------
 export async function fetchBudgetData(year?: number): Promise<BudgetData[]> {
-  if (USE_REAL_API) {
-    const endpoint = year ? `/api/budget?year=${year}` : "/api/budget";
-    return apiCall<BudgetData[]>(endpoint);
+  if (isSuppressed()) {
+    await delay(300);
+    return year ? budgetData.filter((d) => d.year === year) : budgetData;
   }
-
-  // Mock data with simulated network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  if (year) {
-    return budgetData.filter((data) => data.year === year);
+  const path = year ? `/api/budget?year=${year}` : "/api/budget";
+  try {
+    const { data } = await apiFetch<BudgetData[]>(path);
+    return data;
+  } catch {
+    return year ? budgetData.filter((d) => d.year === year) : budgetData;
   }
-
-  return budgetData;
 }
 
-/**
- * Fetch budget categories breakdown
- * Real API endpoint would be: /api/budget/categories?year=2024
- */
-export async function fetchBudgetCategories(year?: number): Promise<BudgetCategory[]> {
-  if (USE_REAL_API) {
-    const endpoint = year ? `/api/budget/categories?year=${year}` : "/api/budget/categories";
-    return apiCall<BudgetCategory[]>(endpoint);
+// ----------------------------------------------------------------
+// Budget categories
+// ----------------------------------------------------------------
+export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
+  if (isSuppressed()) {
+    await delay(300);
+    return budgetCategories;
   }
-
-  // Mock data with simulated network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  return budgetCategories;
+  try {
+    const { data } = await apiFetch<BudgetCategory[]>("/api/budget/categories");
+    return data;
+  } catch {
+    return budgetCategories;
+  }
 }
 
-/**
- * Fetch year-over-year comparisons
- * Real API endpoint would be: /api/comparisons?from=2023&to=2024
- */
-export async function fetchYearComparisons(
-  fromYear: number,
-  toYear: number
-): Promise<YearComparison[]> {
-  if (USE_REAL_API) {
-    return apiCall<YearComparison[]>(`/api/comparisons?from=${fromYear}&to=${toYear}`);
+// ----------------------------------------------------------------
+// Year-over-year comparisons
+// ----------------------------------------------------------------
+export async function fetchYearComparisons(fromYear: number, toYear: number): Promise<YearComparison[]> {
+  if (isSuppressed()) {
+    await delay(300);
+    return yearComparisons;
   }
-
-  // Mock data with simulated network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  return yearComparisons;
+  try {
+    const { data } = await apiFetch<YearComparison[]>(`/api/comparisons?from=${fromYear}&to=${toYear}`);
+    return data;
+  } catch {
+    return yearComparisons;
+  }
 }
 
-/**
- * Export data as CSV
- * This would typically hit an endpoint that generates a CSV file
- */
+// ----------------------------------------------------------------
+// Data freshness status
+// ----------------------------------------------------------------
+export interface DataStatus {
+  datasets: Record<string, { lastUpdated: string; source: string; status: string }>;
+  staleness: Record<string, boolean>;
+  serverTime: string;
+}
+
+export async function fetchDataStatus(): Promise<DataStatus | null> {
+  if (isSuppressed()) return null;
+  try {
+    return await apiFetch<DataStatus>("/api/data-status").then((r) => r as unknown as DataStatus);
+  } catch {
+    return null;
+  }
+}
+
+// ----------------------------------------------------------------
+// CSV export (same as before, no change)
+// ----------------------------------------------------------------
 export async function exportToCSV(dataType: "gdp" | "budget" | "categories"): Promise<Blob> {
-  if (USE_REAL_API) {
-    const response = await fetch(`${API_BASE_URL}/api/export/${dataType}`, {
-      headers: {
-        "Content-Type": "text/csv",
-      },
-    });
-    return await response.blob();
-  }
-
-  // Mock CSV generation
   let csvContent = "";
 
   switch (dataType) {
-    case "gdp":
+    case "gdp": {
+      const rows = await fetchGDPData();
       csvContent = "Year,Quarter,GDP (M BSD),Growth Rate (%),GDP Per Capita\n";
-      gdpData.forEach((row) => {
-        csvContent += `${row.year},${row.quarter},${row.gdp},${row.gdpGrowthRate},${row.gdpPerCapita}\n`;
+      rows.forEach((r) => {
+        csvContent += `${r.year},${r.quarter},${r.gdp},${r.gdpGrowthRate},${r.gdpPerCapita}\n`;
       });
       break;
-    case "budget":
+    }
+    case "budget": {
+      const rows = await fetchBudgetData();
       csvContent = "Year,Fiscal Year,Revenue,Expenditure,Balance,Debt\n";
-      budgetData.forEach((row) => {
-        csvContent += `${row.year},${row.fiscalYear},${row.revenue.total},${row.expenditure.total},${row.balance},${row.debt.total}\n`;
+      rows.forEach((r) => {
+        csvContent += `${r.year},${r.fiscalYear},${r.revenue.total},${r.expenditure.total},${r.balance},${r.debt.total}\n`;
       });
       break;
-    case "categories":
+    }
+    case "categories": {
+      const rows = await fetchBudgetCategories();
       csvContent = "Ministry,Category,Allocated,Spent,Remaining,% Used,Status\n";
-      budgetCategories.forEach((row) => {
-        csvContent += `${row.ministry},${row.category},${row.allocated},${row.spent},${row.remaining},${row.percentageUsed},${row.status}\n`;
+      rows.forEach((r) => {
+        csvContent += `${r.ministry},${r.category},${r.allocated},${r.spent},${r.remaining},${r.percentageUsed},${r.status}\n`;
       });
       break;
+    }
   }
 
   return new Blob([csvContent], { type: "text/csv" });
+}
+
+function delay(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }

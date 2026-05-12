@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Navbar } from "@/components/navbar";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { GDPTrendsChart } from "@/components/gdp-trends-chart";
@@ -11,7 +13,7 @@ import { SectorBreakdownChart } from "@/components/sector-breakdown-chart";
 import { BudgetTable } from "@/components/budget-table";
 import { BudgetAccordion } from "@/components/budget-accordion";
 import { YearComparisonTable } from "@/components/year-comparison";
-import { gdpData, budgetCategories, yearComparisons } from "@/lib/mock-data";
+import { GDPData } from "@/types/bahamas-data";
 import { ChartLine, ArrowLeft } from "lucide-react";
 
 /**
@@ -25,7 +27,46 @@ import { ChartLine, ArrowLeft } from "lucide-react";
  *
  * Data sources: Ministry of Finance, Bahamas National Statistical Institute
  */
+import type { BudgetCategory, BudgetData, YearComparison } from "@/types/bahamas-data";
+
 export default function CurrentEconomyPage() {
+  const [chartGdpData, setChartGdpData] = useState<GDPData[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+  const [budgetData, setBudgetData] = useState<BudgetData | null>(null);
+  const [comparisons, setComparisons] = useState<YearComparison[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [gdpRes, catRes, budgetRes, compRes] = await Promise.allSettled([
+          fetch("/api/gdp").then(r => r.json()),
+          fetch("/api/budget/categories").then(r => r.json()),
+          fetch("/api/budget").then(r => r.json()),
+          fetch("/api/comparisons").then(r => r.json()),
+        ]);
+        if (gdpRes.status === "fulfilled" && gdpRes.value.data) setChartGdpData(gdpRes.value.data);
+        if (catRes.status === "fulfilled" && catRes.value.data) setBudgetCategories(catRes.value.data);
+        if (budgetRes.status === "fulfilled" && budgetRes.value.data?.length) {
+          // Use most recent year's budget
+          const sorted = [...budgetRes.value.data].sort((a, b) => b.year - a.year);
+          setBudgetData(sorted[0]);
+        }
+        if (compRes.status === "fulfilled" && compRes.value.data) setComparisons(compRes.value.data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Derive key metrics from live data
+  const latestYear = chartGdpData.length ? Math.max(...chartGdpData.map(r => r.year)) : null;
+  const latestYearRows = latestYear ? chartGdpData.filter(r => r.year === latestYear) : [];
+  const totalGDP = latestYearRows.reduce((s, r) => s + r.gdp, 0);
+  const avgGrowth = latestYearRows[0]?.gdpGrowthRate ?? 0;
+  const avgPerCapita = latestYearRows[0]?.gdpPerCapita ?? 0;
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -52,9 +93,11 @@ export default function CurrentEconomyPage() {
               <CardHeader>
                 <div className="text-3xl mb-2">💰</div>
                 <CardTitle className="text-2xl font-normal">
-                  <AnimatedCounter value={15.8} prefix="$" suffix="B" decimals={1} />
+                  {loading ? <Skeleton className="h-8 w-28" /> :
+                    <AnimatedCounter value={totalGDP / 1000} prefix="$" suffix="B" decimals={1} />
+                  }
                 </CardTitle>
-                <CardDescription>GDP (2024)</CardDescription>
+                <CardDescription>GDP ({latestYear ?? "—"})</CardDescription>
               </CardHeader>
             </Card>
 
@@ -62,7 +105,9 @@ export default function CurrentEconomyPage() {
               <CardHeader>
                 <div className="text-3xl mb-2">👥</div>
                 <CardTitle className="text-2xl font-normal">
-                  <AnimatedCounter value={38900} prefix="$" decimals={0} />
+                  {loading ? <Skeleton className="h-8 w-28" /> :
+                    <AnimatedCounter value={avgPerCapita ?? 0} prefix="$" decimals={0} />
+                  }
                 </CardTitle>
                 <CardDescription>GDP Per Capita</CardDescription>
               </CardHeader>
@@ -72,7 +117,9 @@ export default function CurrentEconomyPage() {
               <CardHeader>
                 <div className="text-3xl mb-2">📈</div>
                 <CardTitle className="text-2xl font-normal">
-                  <AnimatedCounter value={3.4} suffix="%" decimals={1} />
+                  {loading ? <Skeleton className="h-8 w-28" /> :
+                    <AnimatedCounter value={avgGrowth ?? 0} suffix="%" decimals={1} />
+                  }
                 </CardTitle>
                 <CardDescription>GDP Growth</CardDescription>
               </CardHeader>
@@ -82,9 +129,9 @@ export default function CurrentEconomyPage() {
               <CardHeader>
                 <div className="text-3xl mb-2">🏝️</div>
                 <CardTitle className="text-2xl font-normal">
-                  <AnimatedCounter value={410} suffix="K" decimals={0} />
+                  <AnimatedCounter value={405} suffix="K" decimals={0} />
                 </CardTitle>
-                <CardDescription>Population</CardDescription>
+                <CardDescription>Population (est.)</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -109,7 +156,7 @@ export default function CurrentEconomyPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <GDPTrendsChart data={gdpData} />
+                    {chartGdpData.length > 0 ? <GDPTrendsChart data={chartGdpData} /> : <Skeleton className="h-48 w-full" />}
                   </CardContent>
                 </Card>
 
@@ -121,7 +168,7 @@ export default function CurrentEconomyPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <SectorBreakdownChart data={gdpData} />
+                    {chartGdpData.length > 0 ? <SectorBreakdownChart data={chartGdpData} /> : <Skeleton className="h-48 w-full" />}
                   </CardContent>
                 </Card>
               </div>
@@ -149,7 +196,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <GDPTrendsChart data={gdpData} />
+                  <GDPTrendsChart data={chartGdpData} />
                 </CardContent>
               </Card>
 
@@ -161,7 +208,7 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <SectorBreakdownChart data={gdpData} />
+                  <SectorBreakdownChart data={chartGdpData} />
                 </CardContent>
               </Card>
 
@@ -239,18 +286,20 @@ export default function CurrentEconomyPage() {
                     <CardTitle className="font-normal">📊 Revenue</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
+                    {loading ? <Skeleton className="h-16 w-full" /> : budgetData ? (<>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Revenue</span>
-                      <span className="font-normal">$3.54B</span>
+                      <span className="font-normal">${(budgetData.revenue.total / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax Revenue</span>
-                      <span>$3.02B</span>
+                      <span>${(budgetData.revenue.tax / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Other Revenue</span>
-                      <span>$0.52B</span>
+                      <span>${(budgetData.revenue.nonTax / 1000).toFixed(2)}B</span>
                     </div>
+                    </>) : <p className="text-sm text-muted-foreground">No data</p>}
                   </CardContent>
                 </Card>
 
@@ -259,18 +308,20 @@ export default function CurrentEconomyPage() {
                     <CardTitle className="font-normal">💳 Expenditure</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
+                    {loading ? <Skeleton className="h-16 w-full" /> : budgetData ? (<>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Expenditure</span>
-                      <span className="font-normal">$3.61B</span>
+                      <span className="font-normal">${(budgetData.expenditure.total / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Recurrent</span>
-                      <span>$3.10B</span>
+                      <span>${(budgetData.expenditure.recurrent / 1000).toFixed(2)}B</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Capital</span>
-                      <span>$0.51B</span>
+                      <span>${(budgetData.expenditure.capital / 1000).toFixed(2)}B</span>
                     </div>
+                    </>) : <p className="text-sm text-muted-foreground">No data</p>}
                   </CardContent>
                 </Card>
               </div>
@@ -286,7 +337,13 @@ export default function CurrentEconomyPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <YearComparisonTable data={yearComparisons} fromYear={2023} toYear={2024} />
+                  {comparisons ? (
+                    <YearComparisonTable data={comparisons} fromYear={2023} toYear={2024} />
+                  ) : loading ? (
+                    <Skeleton className="h-32 w-full" />
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No comparison data available.</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
