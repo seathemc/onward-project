@@ -50,13 +50,23 @@ A complete dynamic backend has been built for the Bahamas economic dashboard, pr
 - Government spending allocation (education, infrastructure, climate)
 - Unemployment rate estimates based on growth
 
-**Three Built-in Scenarios:**
+**Six Built-in Scenarios:**
+
+**Economic Scenarios:**
 
 | Scenario | GDP Growth | Tourism | Debt Reduction | Result (2064) |
 |----------|-----------|---------|----------------|---------------|
 | Conservative | 2.0% | 1.5% | 0.8% | $31.8B GDP |
 | Moderate | 3.0% | 2.5% | 1.2% | $47.4B GDP |
 | Optimistic | 3.5% | 3.5% | 1.5% | $57.8B GDP |
+
+**Political Scenarios (Based on 2026 Campaign Platforms):**
+
+| Scenario | GDP Growth | Debt Strategy | Key Focus | Status |
+|----------|-----------|---|---|---|
+| PLP Blueprint | 2.8% | Rapid reduction (1.5%/yr) | Fiscal consolidation, healthcare, digital transform | Incumbent |
+| FNM Better Bahamas | 3.2% | Slower reduction (0.5%/yr) | Business stimulus, tax cuts, entrepreneurship | Opposition |
+| Coalition Consensus | 3.0% | Steady reduction (1.0%/yr) | Balanced approach, combined strengths | Compromise |
 
 **Key Assumptions:**
 - Base year: 2024
@@ -296,6 +306,101 @@ curl -X POST http://localhost:3000/api/scenarios/compare \
   -H "Content-Type: application/json" \
   -d '{"scenarios": [{"id": "conservative"}, {"id": "moderate"}]}'
 ```
+
+## Political Scenarios (Research-Based)
+
+Based on official 2026 campaign platforms from the Progressive Liberal Party and Free National Movement:
+
+### PLP Blueprint for Progress
+**Incumbent government platform** - Focus on macroeconomic stability
+- **GDP Growth:** 2.8% (steady, sustainable)
+- **Debt Strategy:** Aggressive reduction (1.5%/year) - proven track record with Moody's upgrade
+- **Key Achievements:** Deficit down from 10% (2020) to 1.3% (2024)
+- **Priorities:**
+  - Healthcare transformation (mental health centers, 24/7 services)
+  - Digital government integration (MyGateway platform)
+  - Education system overhaul
+  - Island development (Family Islands focus)
+- **Strengths:**
+  - Highest debt sustainability
+  - Improved sovereign credit rating = lower borrowing costs
+  - Quality healthcare reduces outmigration
+  - Long-term economic stability
+- **Challenges:**
+  - Slower near-term growth from fiscal restraint
+  - Requires continued global growth/tourism recovery
+
+### FNM Better Bahamas for All
+**Opposition platform** - Focus on rapid business growth and living standards
+- **GDP Growth:** 3.2% (faster, more volatile)
+- **Debt Strategy:** Slower reduction (0.5%/year) - accepts higher near-term debt
+- **Key Initiatives:**
+  - $100M entrepreneurship investment fund
+  - VAT & duty elimination on healthy foods, medicine
+  - Tax cuts for ordinary people
+  - Healthcare expansion (100 doctors + 200 nurses)
+  - Child support ($200/month for first 2 years)
+  - Crime reduction (10-Point Plan)
+  - Freedom of Information Act implementation
+- **Strengths:**
+  - Highest near-term growth potential
+  - Direct business incentives
+  - Immediate cost-of-living relief
+  - Faster improvements to services
+- **Challenges:**
+  - Higher government debt accumulation
+  - Inflation risk from stimulus spending
+  - Questions about long-term sustainability
+  - Dependent on tax revenue growth
+
+### Coalition Consensus
+**Hypothetical balanced approach** - Combines strengths of both parties
+- **GDP Growth:** 3.0% (middle ground)
+- **Debt Strategy:** Steady reduction (1.0%/year)
+- **Approach:** Selective fiscal investment with maintained discipline
+- **Strengths:**
+  - Most stable economic trajectory
+  - Lowest volatility and unpredictability
+  - Maintains investor confidence
+  - Bipartisan consensus = longer policy continuity
+- **Challenges:**
+  - May lack boldness needed for structural reforms
+  - Compromise might dilute effectiveness
+
+### Using Political Scenarios
+
+Access political scenarios via API:
+
+```bash
+# List all scenarios
+curl http://localhost:3000/api/scenarios?type=list
+
+# Get specific political scenario
+curl http://localhost:3000/api/scenarios?type=plpBlueprint
+curl http://localhost:3000/api/scenarios?type=fnmBetterBahamas
+curl http://localhost:3000/api/scenarios?type=coalitionConsensus
+
+# Compare political scenarios
+curl -X POST http://localhost:3000/api/scenarios/compare \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scenarios": [
+      {"id": "plpBlueprint"},
+      {"id": "fnmBetterBahamas"},
+      {"id": "coalitionConsensus"}
+    ],
+    "year": 2064
+  }'
+```
+
+### Visualizing Political Scenarios
+
+Visit `/political-scenarios` page for interactive comparison:
+- Detailed policy breakdowns for each party
+- Risk and strength assessments
+- Bar charts showing policy intensity
+- Side-by-side scenario comparison table
+- Toggle between individual details and comparison view
 
 ## Next Steps (Future Enhancements)
 
