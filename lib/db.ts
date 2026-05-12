@@ -2,6 +2,7 @@ import { Pool } from "pg";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || "postgres://postgres@localhost:5432/onward",
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
 export async function query(text: string, params?: unknown[]) {
