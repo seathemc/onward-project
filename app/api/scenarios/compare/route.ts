@@ -4,6 +4,7 @@ import {
   ForecastAssumptions,
   ForecastScenario,
 } from "@/lib/forecast/model";
+import { POLITICAL_SCENARIOS } from "@/lib/forecast/political-scenarios";
 
 export const dynamic = "force-dynamic";
 
@@ -37,24 +38,24 @@ export async function POST(req: NextRequest) {
     }
 
     const forecasts: ForecastScenario[] = [];
+    const allScenarios = {
+      ...EconomicForecastModel.SCENARIOS,
+      ...POLITICAL_SCENARIOS,
+    };
 
     for (const scenario of body.scenarios) {
       let forecast: ForecastScenario;
 
       if (scenario.id) {
-        // Use built-in scenario
-        if (
-          !["conservative", "moderate", "optimistic"].includes(scenario.id)
-        ) {
+        // Use built-in scenario (economic or political)
+        if (!(scenario.id in allScenarios)) {
           return NextResponse.json(
             { error: `Unknown scenario: ${scenario.id}` },
             { status: 400 }
           );
         }
         const assumptions =
-          EconomicForecastModel.SCENARIOS[
-            scenario.id as keyof typeof EconomicForecastModel.SCENARIOS
-          ]();
+          allScenarios[scenario.id as keyof typeof allScenarios]();
         forecast = model.generateForecast(assumptions);
       } else if (scenario.assumptions) {
         // Use custom assumptions
