@@ -25,6 +25,8 @@ export function Navbar() {
     { href: "/", label: "Home", icon: "🏠" },
     { href: "/current", label: "Current", icon: "📊" },
     { href: "/dashboard", label: "Forecast", icon: "🔮" },
+    { href: "/scenarios", label: "Scenarios", icon: "📈" },
+    { href: "/political-scenarios", label: "Politics", icon: "🗳️" },
   ];
 
   return (
